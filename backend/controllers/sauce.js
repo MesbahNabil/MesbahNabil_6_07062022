@@ -17,10 +17,11 @@ exports.getSauces = (req, res, next) => {
 // Création d'une sauce.
 exports.createSauce = (req, res, next) => {
 	const sauceObject = JSON.parse(req.body.sauce)
+	// Mango vas générer les id
 	delete sauceObject._id
 	delete sauceObject.userId
 
-	// Spread Operator de ./models/Sauce
+	// Spread Operator (dégrader) de ./models/Sauce
 	const sauce = new Sauce({
 		...sauceObject,
 		userId: req.auth.userId,

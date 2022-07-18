@@ -1,7 +1,8 @@
-// const { log } = require("console")
 const express = require("express")
 const app = express()
+// ORM (Objet relational mapping)
 const mongoose = require("mongoose")
+// Racine
 const path = require("path")
 
 // Routes
@@ -28,8 +29,7 @@ mongoose
 // Accès corps requête JSON (anciennement bodyParser)
 app.use(express.json())
 
-
-// 
+// Routes
 app.use("/api/sauces", sauceRoutes)
 app.use("/api/auth/", userRoutes)
 app.use("/images", express.static(path.join(__dirname, "images")))
