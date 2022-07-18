@@ -1,3 +1,6 @@
+// Dotenv
+require("dotenv").config()
+
 // Hash
 const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken")
@@ -34,7 +37,7 @@ exports.login = (req, res, next) => {
 					}
 					res.status(200).json({
 						userId: user._id,
-						token: jwt.sign({ userId: user._id }, "Secretoken", { expiresIn: "24h" }),
+						token: jwt.sign({ userId: user._id }, process.env.SECRET_TOKEN, { expiresIn: "24h" }),
 					})
 				})
 				.catch((error) => res.status(401).json({ error }))

@@ -1,6 +1,8 @@
+require("dotenv").config()
 // Creation du serveur
 const http = require("http")
 const app = require("./app")
+// const env = require("env")
 
 // normalizePort renvoie un port valide (numero ou chaîne)
 const normalizePort = (val) => {
@@ -14,7 +16,7 @@ const normalizePort = (val) => {
 	}
 	return false
 }
-const port = normalizePort("3000" || "3001")
+const port = normalizePort(process.env.PORT || "3001")
 app.set("port", port)
 
 const errorHandler = (error) => {

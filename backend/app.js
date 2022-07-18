@@ -1,3 +1,5 @@
+require("dotenv").config
+console.log(process.env)
 const express = require("express")
 const app = express()
 // ORM (Objet relational mapping)
@@ -19,7 +21,7 @@ app.use((req, res, next) => {
 
 // Connection API Mongo
 mongoose
-	.connect("mongodb+srv://admin01:Drier-Pristine-Sadden-Upcountry2@atlascluster.gnodg.mongodb.net/?retryWrites=true&w=majority", {
+	.connect(process.env.MANGOOSE, {
 		useNewUrlParser: true,
 		useUnifiedTopology: true,
 	})
