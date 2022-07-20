@@ -1,3 +1,4 @@
+const express = require("express")
 const Sauce = require("../models/Sauce")
 const fs = require("fs")
 
@@ -17,7 +18,7 @@ exports.getSauces = (req, res, next) => {
 // Création d'une sauce.
 exports.createSauce = (req, res, next) => {
 	const sauceObject = JSON.parse(req.body.sauce)
-	// Mango vas générer les id
+	// Mango génére les id
 	delete sauceObject._id
 	delete sauceObject.userId
 
@@ -27,11 +28,21 @@ exports.createSauce = (req, res, next) => {
 		userId: req.auth.userId,
 		imageUrl: `${req.protocol}://${req.get("host")}/images/${req.file.filename}`,
 	})
-
-	sauce
-		.save()
-		.then(() => res.status(201).json({ message: "Objet enregistré !" }))
-		.catch((error) => res.status(400).json({ error: error }))
+	// Vérification
+	if (sauce.userId !== req.auth.userId) {
+		const filename = sauce.imageUrl.split("/images/")[1]
+		fs.unlink(`images/${filename}`, (error) => {
+			if (error) {
+				throw error
+			}
+		})
+		return res.status(403).json({ error: "Requête non autorisée !" })
+	} else {
+		sauce
+			.save()
+			.then(() => res.status(201).json({ message: "Objet enregistré !" }))
+			.catch((error) => res.status(400).json({ error: error }))
+	}
 }
 
 // Récupération d'une sauce par ID
@@ -52,35 +63,46 @@ exports.getSauceById = (req, res, next) => {
 // Suppression d'une sauce.
 exports.deleteSauce = (req, res, next) => {
 	Sauce.findByIdAndDelete({ _id: req.params.id })
-		// Sauce.deleteOne({ _id: req.params.id })
 
 		.then((sauce) => {
-			// Nom de l'image
-			const filename = sauce.imageUrl.split("/images/")[1]
-			// Suppression de l'image avec fs(fileSystem)
-			fs.unlink(`./backend/images/${filename}`, () => {
-				Sauce.deleteOne({ _id: req.params.id })
-					.then(() => res.status(200).json({ message: "Objet supprimé !" }))
-					.catch((error) => res.status(400).json({ error }))
-			})
+			// Vérification
+			if (sauce.userId !== req.auth.userId) {
+				res.status(401).json({ message: "Non-autorisé" })
+			} else {
+				// Nom de l'image
+				const filename = sauce.imageUrl.split("/images/")[1]
+				// Suppression de l'image avec fs(fileSystem)
+				fs.unlink(`./backend/images/${filename}`, () => {
+					Sauce.deleteOne({ _id: req.params.id })
+						.then(() => res.status(200).json({ message: "Objet supprimé !" }))
+						.catch((error) => res.status(400).json({ error }))
+				})
+			}
 		})
 		.catch((error) => res.status(401).json({ error }))
 }
 
 exports.modifySauce = (req, res, next) => {
+	const sauceObject = req.file
+		? {
+				...JSON.parse(req.body.sauce),
+				imageUrl: `${req.protocol}://${req.get("host")}/images/${req.file.filename}`,
+		  }
+		: { ...req.body }
+	delete sauceObject._userId
+
 	Sauce.findOne({ _id: req.params.id }).then((sauce) => {
-		const filename = sauce.imageUrl.split("/images/")[1]
-		fs.unlink(`./backend/images/${filename}`, () => {
-			const sauceObject = req.file
-				? {
-						...JSON.parse(req.body.sauce),
-						imageUrl: `${req.protocol}://${req.get("host")}/images/${req.file.filename}`,
-				  }
-				: { ...req.body }
-			Sauce.updateOne({ _id: req.params.id }, { ...sauceObject, _id: req.params.id })
-				.then(() => res.status(200).json({ message: "Objet modifié !" }))
-				.catch((error) => res.status(400).json({ error }))
-		})
+		// Vérification
+		if (sauce.userId != req.auth.userId) {
+			res.status(401).json({ message: "Non-autorisé" })
+		} else {
+			const filename = sauce.imageUrl.split("/images/")[1]
+			fs.unlink(`./backend/images/${filename}`, () => {
+				Sauce.updateOne({ _id: req.params.id }, { ...sauceObject, _id: req.params.id })
+					.then(() => res.status(200).json({ message: "Objet modifié !" }))
+					.catch((error) => res.status(400).json({ error }))
+			})
+		}
 	})
 }
 
@@ -88,8 +110,7 @@ exports.modifySauce = (req, res, next) => {
 exports.likeSauce = (req, res, next) => {
 	const sauceId = req.params.id
 	const userId = req.body.userId
-	console.log("Log user like")
-	console.log(userId)
+
 	const like = req.body.like
 	//  Like pour la premiere fois (like === 1)
 	if (like === 1) {

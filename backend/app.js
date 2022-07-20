@@ -1,5 +1,6 @@
+// dotenv
 require("dotenv").config
-console.log(process.env)
+
 const express = require("express")
 const app = express()
 // ORM (Objet relational mapping)
@@ -19,7 +20,7 @@ app.use((req, res, next) => {
 	next()
 })
 
-// Connection API Mongo
+// Connection API  Cluster Mongo
 mongoose
 	.connect(process.env.MANGOOSE, {
 		useNewUrlParser: true,
@@ -33,7 +34,7 @@ app.use(express.json())
 
 // Routes
 app.use("/api/sauces", sauceRoutes)
-app.use("/api/auth/", userRoutes)
+app.use("/api/auth", userRoutes)
 app.use("/images", express.static(path.join(__dirname, "images")))
 
 module.exports = app
